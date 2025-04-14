@@ -186,7 +186,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_default_ca_configu
 def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_configured(
     source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE")
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
     ca_bundle_path = source._ca_bundle_path
