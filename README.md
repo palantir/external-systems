@@ -2,7 +2,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/external-systems)
 [![PyPI](https://img.shields.io/pypi/v/external-systems)](https://pypi.org/project/external-systems/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
-
+<a href="https://autorelease.general.dmz.palantir.tech/palantir/external-systems"><img src="https://img.shields.io/badge/Perform%20an-Autorelease-success.svg" alt="Autorelease"></a>
 
 > [!WARNING]
 > This SDK is incubating and subject to change.
