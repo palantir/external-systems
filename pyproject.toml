@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "external-systems"
+version = "0.0.0"
+description = "A Python library for interacting with Foundry Sources"
+authors = ["Palantir Technologies, Inc."]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/palantir/external-systems"
+keywords = [
+    "Palantir",
+    "Foundry",
+    "Sources",
+    "Compute Modules",
+    "Python Functions",
+    "Transforms",
+]
+packages = [{ include = "external_systems" }]
+
+[tool.poetry.dependencies]
+frozendict = "^2.4.6"
+python = "^3.9"
+requests = "^2.32.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "24.1.1"
+isort = "5.13.2"
+mypy = "1.9.0"
+ruff = "0.9.7"
+pytest = "8.0.0"
+pytest-html = "4.1.1"
+poethepoet = "^0.29.0"
+types-requests = "^2.32.0.20241016"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+test = "python -c 'from scripts.checks import test; test()'"
+check_format = "python -c 'from scripts.checks import check_format; check_format()'"
+check_mypy = "python -c 'from scripts.checks import check_mypy; check_mypy()'"
+format = "python -c 'from scripts.checks import format; format()'"
+check_license = "python -c 'from scripts.checks import check_license; check_license()'"
+license = "python -c 'from scripts.checks import license; license()'"
+set_version = "python -c 'from scripts.set_version import main; main()'"
+check = "python -c 'from scripts.checks import check; check()'"
+
+[tool.black]
+line_length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.pytest.ini_options]
+addopts = "--junitxml=./build/pytest-results/pytest-results.xml --html=./build/pytest-results/pytest-results.html"
+cache_dir = "build/.pytest_cache"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+cache-dir = "build/.ruff_cache"
+
+[tool.mypy]
+strict = true
