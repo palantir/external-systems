@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import os
 from tempfile import NamedTemporaryFile
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -200,7 +201,8 @@ def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_conf
 def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_path(
     source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("REQUESTS_CA_BUNDLE")
+    if "REQUESTS_CA_BUNDLE" in os.environ:
+        monkeypatch.delenv("REQUESTS_CA_BUNDLE")
     with NamedTemporaryFile(delete=False, mode="w") as default_ca:
         default_ca.write("my_ca_value\n")
 
