@@ -19,6 +19,7 @@ import re
 import socket
 import ssl
 import time
+from typing import Optional
 
 import urllib3
 
@@ -30,15 +31,20 @@ NUM_RETRIES = 10
 RETRYABLE_RESPONSE_CODES = {503, 429}
 
 
-def create_socket(https_proxy_uri: str, target_host: str, target_port: int) -> socket.socket:
+def create_socket(
+    https_proxy_uri: str, target_host: str, target_port: int, custom_ca_bundle_path: Optional[str] = None
+) -> socket.socket:
     """
     Establishes a socket connection through an HTTPS proxy to a target host and port.
-    Parameters:
+
+    Args:
         https_proxy_uri (str): The URI of the HTTPS proxy, must include auth if required.
         target_host (str): The hostname of the target server to connect to.
         target_port (int): The port number of the target server to connect to.
+
     Returns:
         socket.socket: A connected SSL socket to the target host and port through the proxy.
+
     Raises:
         ValueError: If the proxy URI does not specify a hostname or port, or if the connection fails after retrying, with an invalid response code.
         RuntimeError: If there is an exception during the socket creation process.
@@ -55,7 +61,7 @@ def create_socket(https_proxy_uri: str, target_host: str, target_port: int) -> s
     last_response_code = -1
     for _ in range(NUM_RETRIES):
         try:
-            proxy_socket = _create_ssl_socket(parsed_proxy_uri.hostname, parsed_proxy_uri.port)
+            proxy_socket = _create_ssl_socket(parsed_proxy_uri.hostname, parsed_proxy_uri.port, custom_ca_bundle_path)
             proxy_socket.sendall(f"CONNECT {target_host}:{target_port} HTTP/1.1\r\n".encode())
             proxy_socket.sendall(f"Host: {target_host}:{target_port}\r\n".encode())
 
@@ -88,14 +94,16 @@ def create_socket(https_proxy_uri: str, target_host: str, target_port: int) -> s
     raise ValueError(f"Failed to establish tunnel, invalid response code: {last_response_code}")
 
 
-def _create_ssl_socket(proxy_host: str, proxy_port: int) -> socket.socket:
-    ca_bundle_path = os.environ.get("REQUESTS_CA_BUNDLE")
+def _create_ssl_socket(proxy_host: str, proxy_port: int, custom_ca_bundle_path: Optional[str] = None) -> socket.socket:
+    ca_bundle_path = (
+        custom_ca_bundle_path if custom_ca_bundle_path is not None else os.environ.get("REQUESTS_CA_BUNDLE")
+    )
     if not ca_bundle_path or not os.path.isfile(ca_bundle_path):
-        log.warning("The REQUESTS_CA_BUNDLE environment variable does not exist or is not a file.")
-        raise ValueError("REQUESTS_CA_BUNDLE does not exist")
+        log.warning("The CA_BUNDLE environment variable does not exist or is not a file.")
+        raise ValueError("CA_BUNDLE does not exist")
     if not os.access(ca_bundle_path, os.R_OK):
-        log.warning("The REQUESTS_CA_BUNDLE file is not readable.")
-        raise ValueError("REQUESTS_CA_BUNDLE is not readable")
+        log.warning("The CA_BUNDLE file is not readable.")
+        raise ValueError("CA_BUNDLE is not readable")
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     context.load_verify_locations(ca_bundle_path)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

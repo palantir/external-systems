@@ -12,7 +12,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import os
 from tempfile import NamedTemporaryFile
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -201,8 +200,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_conf
 def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_path(
     source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    if "REQUESTS_CA_BUNDLE" in os.environ:
-        monkeypatch.delenv("REQUESTS_CA_BUNDLE")
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
     with NamedTemporaryFile(delete=False, mode="w") as default_ca:
         default_ca.write("my_ca_value\n")
 
@@ -247,7 +245,33 @@ def test_create_socket(
     source = Source(source_params, on_prem_proxy_uris, egress_proxy_uris, egress_proxy_token, None)
     socket = source.create_socket("target-host", 443)
     mock_create_socket.assert_called_once_with(
-        "https://user:on-prem-proxy-token@palantirfoundry.com/on-prem-proxy/api", "target-host", 443
+        "https://user:on-prem-proxy-token@palantirfoundry.com/on-prem-proxy/api", "target-host", 443, None
+    )
+    assert socket is not None
+
+
+@patch("external_systems.sources._sources.create_socket")
+def test_create_socket_with_custom_ca_bundle_uses_custom_ca_bundle(
+    mock_create_socket: MagicMock,
+    source_params: SourceParameters,
+    on_prem_proxy_uris: list[str],
+    egress_proxy_uris: list[str],
+    egress_proxy_token: str,
+) -> None:
+    source = Source(
+        source_params,
+        on_prem_proxy_uris,
+        egress_proxy_uris,
+        egress_proxy_token,
+        None,
+        ca_bundle_path="custom-ca-bundle-path",
+    )
+    socket = source.create_socket("target-host", 443)
+    mock_create_socket.assert_called_once_with(
+        "https://user:on-prem-proxy-token@palantirfoundry.com/on-prem-proxy/api",
+        "target-host",
+        443,
+        "custom-ca-bundle-path",
     )
     assert socket is not None
 
