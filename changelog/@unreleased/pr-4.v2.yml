@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Allow Custom CA Bundle Paths
+  links:
+  - https://github.com/palantir/external-systems/pull/4
