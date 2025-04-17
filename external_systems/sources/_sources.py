@@ -29,6 +29,7 @@ from ._connections import HttpsConnection
 from ._proxies import create_proxy_session
 from ._refreshable import DefaultSessionCredentialsManager, Refreshable, RefreshHandler
 from ._sockets import create_socket
+from ._utils import read_file
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class Source:
         egress_proxy_token: Optional[str],
         source_configuration: Optional[Any],
         credentials_refresh_handler: Optional[RefreshHandler[SourceCredentials]] = None,
+        ca_bundle_path: Optional[str] = None,
     ):
         self._source_parameters = source_parameters
         self._on_prem_proxy_service_uris = on_prem_proxy_service_uris
@@ -53,6 +55,7 @@ class Source:
         self._source_configuration = source_configuration
         self._egress_proxy_token = egress_proxy_token
         self._credentials_refresh_handler = credentials_refresh_handler
+        self._custom_ca_bundle_path = ca_bundle_path
 
     @cached_property
     def secrets(self) -> Mapping[str, str]:
@@ -84,11 +87,17 @@ class Source:
 
         new_ca_contents = []
 
-        # If requests env var is set, add all existing CAs
-        requests_ca_bundle_path = os.environ.get("REQUESTS_CA_BUNDLE")
-        if requests_ca_bundle_path is not None:
-            with open(requests_ca_bundle_path) as requests_ca_bundle_file:
-                new_ca_contents.append(requests_ca_bundle_file.read())
+        # If a custom CA bundle path is provided, use it.
+        # Otherwise, use the requests CA bundle path if it is set.
+        ca_bundle_path = (
+            self._custom_ca_bundle_path
+            if self._custom_ca_bundle_path is not None
+            else os.environ.get("REQUESTS_CA_BUNDLE")
+        )
+
+        # Copy the CA bundle contents to the new CA bundle file.
+        if ca_bundle_path:
+            new_ca_contents.append(read_file(ca_bundle_path))
 
         # Add all CAs for the source
         for required_ca in self._source_parameters.server_certificates.values():

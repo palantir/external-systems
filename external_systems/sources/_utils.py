@@ -23,3 +23,8 @@ def has_expiration_property(source_credentials: SourceCredentials) -> bool:
     """
 
     return hasattr(source_credentials, "expiration")
+
+
+def read_file(path: str) -> str:
+    with open(path) as file:
+        return file.read()
