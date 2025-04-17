@@ -241,4 +241,4 @@ class Source:
         if not self._https_proxy_url:
             raise ValueError("Only usable with Agent Proxy Sources")
 
-        return create_socket(self._https_proxy_url, target_host, target_port)
+        return create_socket(self._https_proxy_url, target_host, target_port, self._custom_ca_bundle_path)

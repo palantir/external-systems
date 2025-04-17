@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Use custom CA bundle for creating sockets
+  links:
+  - https://github.com/palantir/external-systems/pull/5
