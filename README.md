@@ -12,8 +12,6 @@
 
 The External Systems library is Python SDK built as an interface to reference [Foundry Sources](https://www.palantir.com/docs/foundry/data-connection/set-up-source) from code.
 
-Please see the template [readme](https://github.palantir.build/devx/template-python-library#readme) for any additional repository setup instructions.
-
 ## Installation
 
 You can install the Python package using `pip`:
