@@ -104,7 +104,7 @@ class Source:
             new_ca_contents.append(required_ca)
 
         with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
-            ca_bundle_file.write(os.linesep.join(new_ca_contents) + os.linesep)
+            ca_bundle_file.write("".join(new_ca_contents) + os.linesep)
             return ca_bundle_file.name
 
     @cached_property

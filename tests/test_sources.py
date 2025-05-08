@@ -179,8 +179,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_default_ca_configu
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert "default_ca_value" in ca_contents
-        assert "server_ca_value" in ca_contents
+        assert ca_contents == "default_ca_value\nserver_ca_value\n"
 
 
 def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_configured(
@@ -194,7 +193,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_conf
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert "server_ca_value" in ca_contents
+        assert ca_contents == "server_ca_value\n"
 
 
 def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_path(
@@ -210,8 +209,7 @@ def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_p
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert "my_ca_value" in ca_contents
-        assert "server_ca_value" in ca_contents
+        assert ca_contents == "my_ca_value\nserver_ca_value\n"
 
 
 def test_ca_bundle_path_creation_does_not_use_requests_ca_bundle_if_custom_ca_bundle_configured(
@@ -230,8 +228,7 @@ def test_ca_bundle_path_creation_does_not_use_requests_ca_bundle_if_custom_ca_bu
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert "default_ca_value" in ca_contents
-        assert "server_ca_value" in ca_contents
+        assert ca_contents == "default_ca_value\nserver_ca_value\n"
 
 
 @patch("external_systems.sources._sources.create_socket")

@@ -20,6 +20,22 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
+class CustomCaBundleSession(Session):
+    """
+    A wrapper for requests.Session to override 'verify' property, ignoring REQUESTS_CA_BUNDLE environment variable.
+
+    This is a workaround for https://github.com/psf/requests/issues/3829 (will be fixed in requests 3.0.0)
+    """
+
+    def merge_environment_settings(self, url, proxies, stream, verify, *args, **kwargs):  # type: ignore[no-untyped-def]
+        if isinstance(self.verify, str):
+            verify = self.verify
+
+        return super(CustomCaBundleSession, self).merge_environment_settings(
+            url, proxies, stream, verify, *args, **kwargs
+        )
+
+
 class RetryingTimeoutHttpAdapter(HTTPAdapter):
     def __init__(
         self,
@@ -83,7 +99,7 @@ def create_proxy_session(proxy_url: str, proxy_token: str) -> Session:
     """
 
     adapter = ProxyAdapter(proxy_auth={proxy_url: f"Bearer {proxy_token}"})
-    session = Session()
+    session = CustomCaBundleSession()
     session.mount("http://", adapter)
     session.mount("https://", adapter)
     session.proxies = {"all": proxy_url}
@@ -110,7 +126,7 @@ def create_session(
         timeout (Optional[Union[float, tuple[float, float], tuple[float, None]]]): Timeout settings for the session.
     """
 
-    session = Session()
+    session = CustomCaBundleSession()
 
     if cert:
         session.cert = cert
