@@ -1,5 +1,5 @@
 type: fix
 fix:
-  description: Fix ca_bundle gen
+  description: Fix ca_bundle usage in Python requests Session object
   links:
   - https://github.com/palantir/external-systems/pull/9
