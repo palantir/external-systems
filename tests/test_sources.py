@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import os
+import stat
 from tempfile import NamedTemporaryFile
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -166,26 +168,109 @@ def test_get_https_proxy_url_no_proxy(source_params: SourceParameters) -> None:
     assert https_proxy_url is None
 
 
-def test_ca_bundle_path_creation_for_server_certificates_with_default_ca_configured(
-    source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
+def test_ca_bundle_path_no_server_certificates_returns_default_ca_bundle_path(
+    on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    source_params_empty_server_certs = SourceParameters(
+        secrets={},
+        https_connections={},
+        client_certificate=None,
+        proxy_token="on-prem-proxy-token",
+        server_certificates={},
+        resolved_source_credentials=None,
+    )
+
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
     with NamedTemporaryFile(delete=False, mode="w") as default_ca:
         default_ca.write("default_ca_value\n")
         monkeypatch.setenv("REQUESTS_CA_BUNDLE", default_ca.name)
 
-    source = Source(source_params, on_prem_proxy_uris, [], None, None)
-    ca_bundle_path = source._ca_bundle_path
+    with NamedTemporaryFile(delete=False, mode="w") as custom_ca:
+        custom_ca.write("custom_ca_value\n")
+        source_with_provided_ca_bundle = Source(
+            source_params_empty_server_certs,
+            on_prem_proxy_uris,
+            [],
+            None,
+            None,
+            ca_bundle_path=custom_ca.name,
+        )
 
-    assert ca_bundle_path is not None
-    with open(ca_bundle_path) as f:
+    source_with_requests_ca_bundle = Source(
+        source_params_empty_server_certs,
+        on_prem_proxy_uris,
+        [],
+        None,
+        None,
+    )
+
+    assert source_with_requests_ca_bundle._ca_bundle_path == default_ca.name
+    assert source_with_provided_ca_bundle._ca_bundle_path == custom_ca.name
+
+    with open(source_with_requests_ca_bundle._ca_bundle_path) as f:
         ca_contents = f.read()
-        assert ca_contents == "default_ca_value\nserver_ca_value\nother_server_ca_value\n"
+        assert ca_contents == "default_ca_value\n"
+
+    with open(source_with_provided_ca_bundle._ca_bundle_path) as f:
+        ca_contents = f.read()
+        assert ca_contents == "custom_ca_value\n"
 
 
-def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_configured(
+def test_ca_bundle_path_creation_for_server_certificates_with_no_provided_ca_configured(
     source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+
+    source = Source(source_params, on_prem_proxy_uris, [], None, None)
+
+    assert source._ca_bundle_path is not None
+    with open(source._ca_bundle_path) as f:
+        ca_contents = f.read()
+        assert ca_contents == "server_ca_value\nother_server_ca_value\n"
+
+
+def test_ca_bundle_path_creation_for_server_certificates_with_provided_ca_configured(
+    source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+    with NamedTemporaryFile(delete=False, mode="w") as default_ca:
+        default_ca.write("default_ca_value\n")
+        monkeypatch.setenv("REQUESTS_CA_BUNDLE", default_ca.name)
+
+    with NamedTemporaryFile(delete=False, mode="w") as custom_ca:
+        custom_ca.write("custom_ca_value\n")
+        source_with_provided_ca_bundle = Source(
+            source_params,
+            on_prem_proxy_uris,
+            [],
+            None,
+            None,
+            ca_bundle_path=custom_ca.name,
+        )
+
+    source_with_requests_ca_bundle = Source(source_params, on_prem_proxy_uris, [], None, None)
+
+    assert source_with_requests_ca_bundle._ca_bundle_path is not None
+    assert source_with_provided_ca_bundle._ca_bundle_path == custom_ca.name
+
+    with open(source_with_requests_ca_bundle._ca_bundle_path) as f:
+        ca_contents = f.read()
+        assert ca_contents == "default_ca_value\nserver_ca_value\nother_server_ca_value\n"
+
+    with open(source_with_provided_ca_bundle._ca_bundle_path) as f:
+        ca_contents = f.read()
+        assert ca_contents == "custom_ca_value\nserver_ca_value\nother_server_ca_value\n"
+
+
+def test_ca_bundle_path_creation_defaults_to_temporary_file_if_no_permission_to_write_to_provided_ca_bundle(
+    source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+    with NamedTemporaryFile(delete=False, mode="w") as requests_ca_bundle:
+        requests_ca_bundle.write("requests_ca_bundle_value\n")
+        current_permissions = os.stat(requests_ca_bundle.name).st_mode
+        readonly_permissions = current_permissions & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+        os.chmod(requests_ca_bundle.name, readonly_permissions)
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
     ca_bundle_path = source._ca_bundle_path
@@ -196,45 +281,15 @@ def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_conf
         assert ca_contents == "server_ca_value\nother_server_ca_value\n"
 
 
-def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_path(
+def test_ca_bundle_path_creation_defaults_to_temporary_file_if_no_permission_to_read_to_provided_ca_bundle(
     source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
-    with NamedTemporaryFile(delete=False, mode="w") as default_ca:
-        default_ca.write("my_ca_value\n")
-
-    source = Source(source_params, on_prem_proxy_uris, [], None, None, ca_bundle_path=default_ca.name)
-    ca_bundle_path = source._ca_bundle_path
-
-    assert ca_bundle_path is not None
-    with open(ca_bundle_path) as f:
-        ca_contents = f.read()
-        assert ca_contents == "my_ca_value\nserver_ca_value\nother_server_ca_value\n"
-
-
-def test_ca_bundle_path_creation_does_not_use_requests_ca_bundle_if_custom_ca_bundle_configured(
-    source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
     with NamedTemporaryFile(delete=False, mode="w") as requests_ca_bundle:
         requests_ca_bundle.write("requests_ca_bundle_value\n")
-        monkeypatch.setenv("REQUESTS_CA_BUNDLE", requests_ca_bundle.name)
-
-    with NamedTemporaryFile(delete=False, mode="w") as default_ca:
-        default_ca.write("default_ca_value\n")
-
-    source = Source(source_params, on_prem_proxy_uris, [], None, None, ca_bundle_path=default_ca.name)
-    ca_bundle_path = source._ca_bundle_path
-
-    assert ca_bundle_path is not None
-    with open(ca_bundle_path) as f:
-        ca_contents = f.read()
-        assert ca_contents == "default_ca_value\nserver_ca_value\nother_server_ca_value\n"
-
-
-def test_ca_bundle_path_creation_defaults_to_temporary_file_if_no_custom_ca_bundle_path_or_requests_ca_bundle_configured(
-    source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
+        current_permissions = os.stat(requests_ca_bundle.name).st_mode
+        readonly_permissions = current_permissions & ~(stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        os.chmod(requests_ca_bundle.name, readonly_permissions)
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
     ca_bundle_path = source._ca_bundle_path

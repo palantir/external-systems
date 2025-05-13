@@ -81,22 +81,54 @@ class Source:
 
     @cached_property
     def _ca_bundle_path(self) -> Optional[str]:
-        if self._source_parameters.server_certificates is None:
-            return None
+        """
+        Returns the path to the CA bundle file with all custom CA certificates defined in the Source.
 
-        # Precedence of which CA bundle to use for the Session object:
-        # 1. Custom CA bundle path (if provided we assume PEM format)
-        # 2. Requests CA bundle path
-        # 3. Temporary file
-        ca_bundle_path = (
-            self._custom_ca_bundle_path
-            or os.environ.get("REQUESTS_CA_BUNDLE")
-            or NamedTemporaryFile(delete=False, mode="w").name
-        )
+        Precedence of which CA bundle to use:
+        1. Custom CA bundle path (if provided assumes PEM format)
+        2. Requests CA bundle path
+        3. Temporary file
+        """
 
-        server_certificates = self._source_parameters.server_certificates.values()
-        with open(ca_bundle_path, "a") as ca_bundle_file:
-            ca_bundle_file.write(os.linesep.join(server_certificates) + os.linesep)
+        provided_ca_bundle_path = self._custom_ca_bundle_path or os.environ.get("REQUESTS_CA_BUNDLE")
+
+        if not self._source_parameters.server_certificates:
+            return provided_ca_bundle_path
+
+        # Certificates from the Source to add to the CA bundle
+        server_certificates = list(self._source_parameters.server_certificates.values())
+
+        # If no provided CA bundle path, create a temporary file with only the server certificates
+        if not provided_ca_bundle_path:
+            with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
+                ca_bundle_file.write(os.linesep.join(server_certificates) + os.linesep)
+                return ca_bundle_file.name
+
+        # See https://docs.python.org/3/library/os.html#os.access for why we don't use os.access
+        # First try appending the server certificates to the provided CA bundle path
+        try:
+            with open(provided_ca_bundle_path, "a") as provided_ca_bundle_file:
+                provided_ca_bundle_file.write(os.linesep.join(server_certificates) + os.linesep)
+                return provided_ca_bundle_path
+        except PermissionError:
+            log.warning("PermissionError when writing to provided CA bundle path, falling back to temporary file.")
+
+        # Second try reading the provided CA bundle path and appending all content to the new CA bundle
+        new_ca_contents = []
+        try:
+            with open(provided_ca_bundle_path) as provided_ca_bundle_file:
+                new_ca_contents.append(provided_ca_bundle_file.read())
+        except PermissionError:
+            log.warning(
+                "PermissionError when reading from provided CA bundle path, falling back to temporary file with only the Source defined certificates."
+            )
+
+        # Finally, if no permissions to read or write to the provided CA bundle path, create a temporary file with only the Source defined certificates
+        for required_ca in self._source_parameters.server_certificates.values():
+            new_ca_contents.append(required_ca)
+
+        with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
+            ca_bundle_file.write(os.linesep.join(new_ca_contents) + os.linesep)
             return ca_bundle_file.name
 
     @cached_property
