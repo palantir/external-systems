@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Refactor ca implementation
+  links:
+  - https://github.com/palantir/external-systems/pull/11
