@@ -29,7 +29,6 @@ from ._connections import HttpsConnection
 from ._proxies import create_proxy_session
 from ._refreshable import DefaultSessionCredentialsManager, Refreshable, RefreshHandler
 from ._sockets import create_socket
-from ._utils import read_file
 
 log = logging.getLogger(__name__)
 
@@ -85,26 +84,19 @@ class Source:
         if self._source_parameters.server_certificates is None:
             return None
 
-        new_ca_contents = []
-
-        # If a custom CA bundle path is provided, use it.
-        # Otherwise, use the requests CA bundle path if it is set.
+        # Precedence of which CA bundle to use for the Session object:
+        # 1. Custom CA bundle path (if provided we assume PEM format)
+        # 2. Requests CA bundle path
+        # 3. Temporary file
         ca_bundle_path = (
             self._custom_ca_bundle_path
-            if self._custom_ca_bundle_path is not None
-            else os.environ.get("REQUESTS_CA_BUNDLE")
+            or os.environ.get("REQUESTS_CA_BUNDLE")
+            or NamedTemporaryFile(delete=False, mode="w").name
         )
 
-        # Copy the CA bundle contents to the new CA bundle file.
-        if ca_bundle_path:
-            new_ca_contents.append(read_file(ca_bundle_path))
-
-        # Add all CAs for the source
-        for required_ca in self._source_parameters.server_certificates.values():
-            new_ca_contents.append(required_ca)
-
-        with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
-            ca_bundle_file.write(os.linesep.join(new_ca_contents) + os.linesep)
+        server_certificates = self._source_parameters.server_certificates.values()
+        with open(ca_bundle_path, "a") as ca_bundle_file:
+            ca_bundle_file.write(os.linesep.join(server_certificates) + os.linesep)
             return ca_bundle_file.name
 
     @cached_property
