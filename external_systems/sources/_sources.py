@@ -113,17 +113,11 @@ class Source:
         except PermissionError:
             log.warning("PermissionError when writing to provided CA bundle path, falling back to temporary file.")
 
-        # Second try reading the provided CA bundle path and appending all content to the new CA bundle
+        # Finally, try reading the provided CA bundle path and appending all content to the new CA bundle
         new_ca_contents = []
-        try:
-            with open(provided_ca_bundle_path) as provided_ca_bundle_file:
-                new_ca_contents.append(provided_ca_bundle_file.read())
-        except PermissionError:
-            log.warning(
-                "PermissionError when reading from provided CA bundle path, falling back to temporary file with only the Source defined certificates."
-            )
+        with open(provided_ca_bundle_path) as provided_ca_bundle_file:
+            new_ca_contents.append(provided_ca_bundle_file.read())
 
-        # Finally, if no permissions to read or write to the provided CA bundle path, create a temporary file with only the Source defined certificates
         for required_ca in self._source_parameters.server_certificates.values():
             new_ca_contents.append(required_ca)
 

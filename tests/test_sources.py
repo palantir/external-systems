@@ -15,7 +15,7 @@
 import os
 import stat
 from tempfile import NamedTemporaryFile
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -271,33 +271,20 @@ def test_ca_bundle_path_creation_defaults_to_temporary_file_if_no_permission_to_
         current_permissions = os.stat(requests_ca_bundle.name).st_mode
         readonly_permissions = current_permissions & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
         os.chmod(requests_ca_bundle.name, readonly_permissions)
+        monkeypatch.setenv("REQUESTS_CA_BUNDLE", requests_ca_bundle.name)
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
     ca_bundle_path = source._ca_bundle_path
 
-    assert ca_bundle_path is not None
-    with open(ca_bundle_path) as f:
+    assert os.getenv("REQUESTS_CA_BUNDLE") is not None
+    with open(cast(str, os.getenv("REQUESTS_CA_BUNDLE"))) as f:
         ca_contents = f.read()
-        assert ca_contents == "server_ca_value\nother_server_ca_value\n"
-
-
-def test_ca_bundle_path_creation_defaults_to_temporary_file_if_no_permission_to_read_to_provided_ca_bundle(
-    source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
-    with NamedTemporaryFile(delete=False, mode="w") as requests_ca_bundle:
-        requests_ca_bundle.write("requests_ca_bundle_value\n")
-        current_permissions = os.stat(requests_ca_bundle.name).st_mode
-        readonly_permissions = current_permissions & ~(stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-        os.chmod(requests_ca_bundle.name, readonly_permissions)
-
-    source = Source(source_params, on_prem_proxy_uris, [], None, None)
-    ca_bundle_path = source._ca_bundle_path
+        assert ca_contents == "requests_ca_bundle_value\n"
 
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert ca_contents == "server_ca_value\nother_server_ca_value\n"
+        assert ca_contents == "requests_ca_bundle_value\n\nserver_ca_value\nother_server_ca_value\n"
 
 
 @patch("external_systems.sources._sources.create_socket")
