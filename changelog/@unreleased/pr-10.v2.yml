@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Allow unformatted certs
+  links:
+  - https://github.com/palantir/external-systems/pull/10

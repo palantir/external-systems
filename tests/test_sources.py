@@ -170,7 +170,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_default_ca_configu
     source_params: SourceParameters, on_prem_proxy_uris: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     with NamedTemporaryFile(delete=False, mode="w") as default_ca:
-        default_ca.write("default_ca_value\n")
+        default_ca.write("default_ca_value")
         monkeypatch.setenv("REQUESTS_CA_BUNDLE", default_ca.name)
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
@@ -209,7 +209,7 @@ def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_p
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert ca_contents == "my_ca_value\nserver_ca_value\n"
+        assert ca_contents == "my_ca_value\n\nserver_ca_value\n"
 
 
 def test_ca_bundle_path_creation_does_not_use_requests_ca_bundle_if_custom_ca_bundle_configured(
@@ -228,7 +228,7 @@ def test_ca_bundle_path_creation_does_not_use_requests_ca_bundle_if_custom_ca_bu
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
         ca_contents = f.read()
-        assert ca_contents == "default_ca_value\nserver_ca_value\n"
+        assert ca_contents == "default_ca_value\n\nserver_ca_value\n"
 
 
 @patch("external_systems.sources._sources.create_socket")
