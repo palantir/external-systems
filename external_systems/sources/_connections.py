@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Mapping, Optional, Tuple
+from typing import Callable, Mapping, Optional, Tuple
 
 from frozendict import frozendict
 from requests import Session
@@ -31,14 +31,14 @@ class HttpsConnection:
         connection_parameters: HttpsConnectionParameters,
         client_certificate: Optional[Tuple[str, str]] = None,
         proxy_uri_with_auth: Optional[str] = None,
-        ca_bundle_path: Optional[str] = None,
+        ca_bundle_path_supplier: Callable[[], Optional[str]] = lambda: None,
     ):
         self._client_certificate = client_certificate
         self._headers = frozendict(connection_parameters.headers)
         self._url = connection_parameters.url
         self._query_params = frozendict(connection_parameters.query_params)
         self._proxies = frozendict({"https": proxy_uri_with_auth}) if proxy_uri_with_auth is not None else None
-        self._ca_bundle_path = ca_bundle_path
+        self._ca_bundle_path_supplier = ca_bundle_path_supplier
 
     def get_client(self, timeout: int = 30) -> Session:
         """Get the HTTP client for this connection.
@@ -51,7 +51,7 @@ class HttpsConnection:
 
         return create_session(
             cert=self._client_certificate,
-            ca_bundle_path=self._ca_bundle_path,
+            ca_bundle_path=self._ca_bundle_path_supplier(),
             headers=self._headers,
             user_agent="external-systems",
             proxies=self._proxies,

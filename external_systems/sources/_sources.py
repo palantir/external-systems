@@ -75,13 +75,12 @@ class Source:
     def _https_connections(self) -> Mapping[str, HttpsConnection]:
         return frozendict(
             {
-                key: HttpsConnection(params, self._client_certificate, self._https_proxy_url, self._ca_bundle_path)
+                key: HttpsConnection(params, self._client_certificate, self._https_proxy_url, self._get_ca_bundle_path)
                 for key, params in self._source_parameters.https_connections.items()
             }
         )
 
-    @cached_property
-    def _ca_bundle_path(self) -> Optional[str]:
+    def _get_ca_bundle_path(self) -> Optional[str]:
         if self._source_parameters.server_certificates is None:
             return None
 
