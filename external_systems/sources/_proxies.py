@@ -26,11 +26,23 @@ class CustomCaBundleSession(Session):
     A wrapper for requests.Session to override 'verify' property, ignoring REQUESTS_CA_BUNDLE environment variable.
 
     This is a workaround for https://github.com/psf/requests/issues/3829 (will be fixed in requests 3.0.0)
+    
+    The standard behavior of requests is to ALWAYS use the REQUESTS_CA_BUNDLE environment variable here if "verify" is not set on
+    the request (even if it's set on the session level).
     """
 
     def merge_environment_settings(self, url, proxies, stream, verify, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if isinstance(self.verify, str) and os.path.exists(self.verify):
+        user_has_manually_overridden_verify = verify is not None
+        
+        # The source certs will not exist, for example, if the client is passed to a spark UDF that runs in a different environment.
+        # In this case, the verify path does not exist on the new environment, so we should not try use it and instead default to standard behavior.
+        source_certs_exist = isinstance(self.verify, str) and os.path.exists(self.verify)
+        
+        if not user_has_manually_overridden_verify and source_certs_exist:
             verify = self.verify
+
+        # else (override exists or the source certs do not exist): 
+        #   Use the override. If there is no override (verify=None), then this will default to REQUESTS_CA_BUNDLE.
 
         return super(CustomCaBundleSession, self).merge_environment_settings(
             url, proxies, stream, verify, *args, **kwargs
