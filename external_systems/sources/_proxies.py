@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import os
 from functools import cache
 from typing import Any, Mapping, Optional, Union
 
@@ -28,7 +29,7 @@ class CustomCaBundleSession(Session):
     """
 
     def merge_environment_settings(self, url, proxies, stream, verify, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if isinstance(self.verify, str):
+        if isinstance(self.verify, str) and os.path.exists(self.verify):
             verify = self.verify
 
         return super(CustomCaBundleSession, self).merge_environment_settings(
