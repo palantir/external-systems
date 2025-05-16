@@ -19,6 +19,7 @@ from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+import os
 
 class CustomCaBundleSession(Session):
     """
@@ -28,7 +29,7 @@ class CustomCaBundleSession(Session):
     """
 
     def merge_environment_settings(self, url, proxies, stream, verify, *args, **kwargs):  # type: ignore[no-untyped-def]
-        if isinstance(self.verify, str):
+        if isinstance(self.verify, str) and os.path.exists(self.verify):
             verify = self.verify
 
         return super(CustomCaBundleSession, self).merge_environment_settings(
