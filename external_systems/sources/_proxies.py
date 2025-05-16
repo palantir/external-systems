@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import os
 from functools import cache
 from typing import Any, Mapping, Optional, Union
 
@@ -19,7 +20,6 @@ from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-import os
 
 class CustomCaBundleSession(Session):
     """
