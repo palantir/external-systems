@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Respect verify overrides for client
+  links:
+  - https://github.com/palantir/external-systems/pull/14
