@@ -174,7 +174,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_default_ca_configu
         monkeypatch.setenv("REQUESTS_CA_BUNDLE", default_ca.name)
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
-    ca_bundle_path = source._ca_bundle_path
+    ca_bundle_path = source.ca_bundle_path
 
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
@@ -188,7 +188,7 @@ def test_ca_bundle_path_creation_for_server_certificates_with_no_default_ca_conf
     monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None)
-    ca_bundle_path = source._ca_bundle_path
+    ca_bundle_path = source.ca_bundle_path
 
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
@@ -204,7 +204,7 @@ def test_ca_bundle_path_creation_for_server_certificates_uses_custom_ca_bundle_p
         default_ca.write("my_ca_value\n")
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None, ca_bundle_path=default_ca.name)
-    ca_bundle_path = source._ca_bundle_path
+    ca_bundle_path = source.ca_bundle_path
 
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
@@ -223,7 +223,7 @@ def test_ca_bundle_path_creation_does_not_use_requests_ca_bundle_if_custom_ca_bu
         default_ca.write("default_ca_value\n")
 
     source = Source(source_params, on_prem_proxy_uris, [], None, None, ca_bundle_path=default_ca.name)
-    ca_bundle_path = source._ca_bundle_path
+    ca_bundle_path = source.ca_bundle_path
 
     assert ca_bundle_path is not None
     with open(ca_bundle_path) as f:
