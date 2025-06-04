@@ -76,14 +76,14 @@ class Source:
         return frozendict(
             {
                 key: HttpsConnection(
-                    params, self._client_certificate, self._https_proxy_url, self.server_certificates_path
+                    params, self._client_certificate, self._https_proxy_url, self.server_certificates_file_path
                 )
                 for key, params in self._source_parameters.https_connections.items()
             }
         )
 
     @property
-    def server_certificates_path(self) -> Optional[str]:
+    def server_certificates_file_path(self) -> Optional[str]:
         """
         File path to the CA bundle file containing all server certificates required by the Source.
         If no server certificates are defined on the Source, this will return None.
@@ -146,9 +146,9 @@ class Source:
             )
         elif egress_proxy_configured:
             # we checked this earlier, but assert again here to make mypy happy
-            assert (
-                self._egress_proxy_token is not None
-            ), "no egress proxy parameters found while configuring egress proxy session"
+            assert self._egress_proxy_token is not None, (
+                "no egress proxy parameters found while configuring egress proxy session"
+            )
             if len(self._egress_proxy_service_uris) == 0:
                 raise ValueError("egress proxy was configured for this source, but egress proxy URIs were not present")
             return create_proxy_session(self._https_proxy_url, self._egress_proxy_token)
