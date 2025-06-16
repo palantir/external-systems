@@ -16,9 +16,10 @@ import logging
 import os
 import random
 import socket
+import warnings
 from functools import cached_property
 from tempfile import NamedTemporaryFile
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional, Tuple, cast
 
 import urllib3.util
 from frozendict import frozendict
@@ -192,15 +193,29 @@ class Source:
 
     def get_aws_credentials(self) -> Refreshable[AwsCredentials]:
         """
-        Get the AWS credentials from the Source.
-
-        Supported Sources:
-            - S3
+        DEPRECATED: Use get_session_credentials instead.
         """
+        warnings.warn(
+            "get_aws_credentials is deprecated and will be removed in a future release. "
+            "Use get_session_credentials instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._maybe_refreshable_resolved_source_credentials is None:
             raise ValueError("Resolved source credentials are not present on the Source.")
         if not isinstance(self._maybe_refreshable_resolved_source_credentials.get(), AwsCredentials):
             raise ValueError("Resolved source credentials are not of type AwsCredentials.")
+        return cast(Refreshable[AwsCredentials], self._maybe_refreshable_resolved_source_credentials)
+
+    def get_session_credentials(self) -> Refreshable[SourceCredentials]:
+        """
+        Supported Sources:
+            - S3
+            - BigQuery
+            - Google Cloud Storage
+        """
+        if self._maybe_refreshable_resolved_source_credentials is None:
+            raise ValueError("Resolved source credentials are not present on the Source.")
         return self._maybe_refreshable_resolved_source_credentials
 
     def get_secret(self, key: str) -> str:

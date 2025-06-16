@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Support GCP oauth creds
+  links:
+  - https://github.com/palantir/external-systems/pull/16

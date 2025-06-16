@@ -370,18 +370,18 @@ def test_maybe_refreshable_resolved_source_credentials_without_credentials(
     assert result is None
 
 
-def test_get_aws_credentials_invokes_refreshable(
+def test_get_session_credentials_invokes_refreshable(
     source_params: SourceParameters,
     on_prem_proxy_uris: list[str],
     egress_proxy_uris: list[str],
     egress_proxy_token: str,
 ) -> None:
     source = Source(source_params, on_prem_proxy_uris, egress_proxy_uris, egress_proxy_token, None)
-    aws_credentials = source.get_aws_credentials()
+    aws_credentials = source.get_session_credentials()
     assert aws_credentials is not None
 
 
-def test_get_aws_credentials_no_resolved_source_credentials(
+def test_get_session_credentials_no_resolved_source_credentials(
     source_params: SourceParameters,
     on_prem_proxy_uris: list[str],
     egress_proxy_uris: list[str],
@@ -397,7 +397,7 @@ def test_get_aws_credentials_no_resolved_source_credentials(
     )
     source = Source(source_params_no_credentials, on_prem_proxy_uris, egress_proxy_uris, egress_proxy_token, None)
     with pytest.raises(ValueError, match="Resolved source credentials are not present on the Source."):
-        _ = source.get_aws_credentials()
+        _ = source.get_session_credentials()
 
 
 def test_get_source_url(
