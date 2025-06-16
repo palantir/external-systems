@@ -52,18 +52,21 @@ my_source: Source = ...
 some_secret: str = my_source.get_secret("SECRET_NAME")
 ```
 
-For sources using session credentials we support credentials generation and refresh management. Currently on an S3 source you can access session credentials using `get_aws_credentials()`. This method will throw if the source is not pre-configured with `AwsCredentials`
+For sources using session credentials we support credentials generation and refresh management. This can be done by using `get_session_credentials` which supports `S3`, `BigQuery`, `Google Cloud Storage` sources.
 
 _Session credentials may not be available in all Foundry runtime environments_
 
 ```python
-from external_systems.sources import Source, Refreshable, AwsCredentials
+from external_systems.sources import Source, Refreshable, SourceCredentials, AwsCredentials
 
 s3_source: Source = ...
 
-refreshable_credentials: Refreshable[AwsCredentials] = s3_source.get_aws_credentials()
+refreshable_credentials: Refreshable[SourceCredentials] = s3_source.get_session_credentials()
 
-session_credentials: AwsCredentials = refreshable_credentials.get()
+session_credentials: SourceCredentials = refreshable_credentials.get()
+
+if not isinstance(session_credentials, AwsCredentials):
+    raise ...
 ```
 
 ## On-prem Connectivity with [Foundry Agent Proxy](https://www.palantir.com/docs/foundry/data-connection/agent-proxy-runtime)

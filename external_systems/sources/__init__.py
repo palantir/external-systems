@@ -16,6 +16,7 @@ from ._api import (
     AwsCredentials,
     ClientCertificate,
     ClientCertificateFilePaths,
+    GcpOauthCredentials,
     HttpsConnectionParameters,
     SourceCredentials,
     SourceParameters,
@@ -27,6 +28,7 @@ from ._sources import Source
 __all__ = [
     "ClientCertificate",
     "ClientCertificateFilePaths",
+    "GcpOauthCredentials",
     "HttpsConnection",
     "HttpsConnectionParameters",
     "Source",
