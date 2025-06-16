@@ -193,10 +193,7 @@ class Source:
 
     def get_aws_credentials(self) -> Refreshable[AwsCredentials]:
         """
-        Get the AWS credentials from the Source.
-
-        Supported Sources:
-            - S3
+        DEPRECATED: Use get_session_credentials instead.
         """
         warnings.warn(
             "get_aws_credentials is deprecated and will be removed in a future release. "
