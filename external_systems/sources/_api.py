@@ -72,8 +72,14 @@ class GcpOauthCredentials:
     expiration: Optional[datetime] = None
 
 
+@dataclass(frozen=True)
+class OauthCredentials:
+    access_token: str
+    expiration: datetime
+
+
 # Each new credential type must include an expiration field
-SourceCredentials = Union[AwsCredentials, GcpOauthCredentials]
+SourceCredentials = Union[AwsCredentials, GcpOauthCredentials, OauthCredentials]
 
 
 @dataclass(frozen=True)
