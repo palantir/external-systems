@@ -43,6 +43,14 @@ jobs:
       - run: poetry install
       - run: poetry run poe check_license
 
+  check_api:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run: poetry install
+      - run: poetry run pyapi analyze
+
   circle-all:
     docker:
       - image: node:lts
@@ -74,6 +82,8 @@ workflows:
         <<: *always-run
       - check_license:
         <<: *always-run
+      - check_api:
+        <<: *always-run
       - circle-all:
           <<: *always-run
           requires:
@@ -84,6 +94,7 @@ workflows:
             - mypy
             - check_format
             - check_license
+            - check_api
       - publish:
           requires:
             - circle-all
