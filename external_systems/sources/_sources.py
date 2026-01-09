@@ -233,8 +233,20 @@ class Source:
             HttpsConnection: The requested HttpsConnection object.
         """
 
-        if len(self._https_connections) != 1:
-            raise ValueError("Only single connection sources are supported.")
+        if len(self._https_connections)  == 0:
+            raise ValueError(
+                "Only single connection sources are supported, but found none"
+                "get_https_connection() is only supported for source types that include an HTTPS connection (e.g., REST API sources). "
+                "For other source types, you can still use this source for secrets and egress policies, "
+                "but you will need to manually configure your HTTP client using the requests library directly. "
+                "Example: requests.get(url, timeout=10)"
+            )
+
+        if len(self._https_connections)  > 1:
+            raise ValueError(
+                f"Source has more than 1 HTTPS connections, but only single connection sources are supported. "
+                "Please configure your source with exactly one HTTP connection."
+            )
         return next(iter(self._https_connections.values()))
 
     def get_https_proxy_uri(self) -> Optional[str]:
