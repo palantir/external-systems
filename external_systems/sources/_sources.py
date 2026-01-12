@@ -233,7 +233,7 @@ class Source:
             HttpsConnection: The requested HttpsConnection object.
         """
 
-        if len(self._https_connections)  == 0:
+        if len(self._https_connections) == 0:
             raise ValueError(
                 "Only single connection sources are supported, but found none"
                 "get_https_connection() is only supported for source types that include an HTTPS connection (e.g., REST API sources). "
@@ -242,7 +242,7 @@ class Source:
                 "Example: requests.get(url, timeout=10)"
             )
 
-        if len(self._https_connections)  > 1:
+        if len(self._https_connections) > 1:
             raise ValueError(
                 f"Source has more than 1 HTTPS connections, but only single connection sources are supported. "
                 "Please configure your source with exactly one HTTP connection."
