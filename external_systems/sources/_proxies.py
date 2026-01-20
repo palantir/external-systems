@@ -19,6 +19,7 @@ from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+
 class CustomCaBundleSession(Session):
     """
     A wrapper for requests.Session to override 'verify' property, ignoring REQUESTS_CA_BUNDLE environment variable.

@@ -154,7 +154,7 @@ class Source:
             ), "no egress proxy parameters found while configuring egress proxy session"
             if len(self._egress_proxy_service_uris) == 0:
                 raise ValueError("egress proxy was configured for this source, but egress proxy URIs were not present")
-            
+
             if not self._https_proxy_url:
                 raise ValueError("egress proxy configured but no proxy URIs are available")
 
