@@ -19,7 +19,6 @@ from requests import PreparedRequest, Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-
 class CustomCaBundleSession(Session):
     """
     A wrapper for requests.Session to override 'verify' property, ignoring REQUESTS_CA_BUNDLE environment variable.
@@ -120,9 +119,9 @@ def create_proxy_session(proxy_url: str, proxy_token: str) -> Session:
 def create_session(
     cert: Optional[Union[str, tuple[str, str]]] = None,
     ca_bundle_path: Optional[str] = None,
-    headers: Optional[dict[str, str]] = None,
+    headers: Optional[Mapping[str, str]] = None,
     user_agent: Optional[str] = None,
-    proxies: Optional[dict[str, str]] = None,
+    proxies: Optional[Mapping[str, str]] = None,
     timeout: Optional[Union[float, tuple[float, float], tuple[float, None]]] = None,
 ) -> Session:
     """
@@ -155,6 +154,6 @@ def create_session(
         session.headers["User-Agent"] = user_agent
 
     if proxies:
-        session.proxies = proxies
+        session.proxies = dict(proxies)
 
     return session

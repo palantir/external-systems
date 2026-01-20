@@ -142,6 +142,8 @@ class Source:
                 raise ValueError(
                     "on-prem proxy was configured for this source, but on-prem proxy URIs were not present"
                 )
+            if self._source_parameters.proxy_token is None:
+                raise ValueError("on-prem proxy was configured but no proxy token was available")
             return create_proxy_session(
                 random.choice(self._on_prem_proxy_service_uris), self._source_parameters.proxy_token
             )
@@ -152,6 +154,10 @@ class Source:
             ), "no egress proxy parameters found while configuring egress proxy session"
             if len(self._egress_proxy_service_uris) == 0:
                 raise ValueError("egress proxy was configured for this source, but egress proxy URIs were not present")
+            
+            if not self._https_proxy_url:
+                raise ValueError("egress proxy configured but no proxy URIs are available")
+
             return create_proxy_session(self._https_proxy_url, self._egress_proxy_token)
         else:
             raise ValueError(
