@@ -128,7 +128,6 @@ class Source:
 
         return cert_file.name, private_key_file.name
 
-    @cached_property
     def _proxy_session(self) -> Session:
         egress_proxy_configured = self._egress_proxy_token is not None
         on_prem_proxy_configured = self._source_parameters.proxy_token is not None

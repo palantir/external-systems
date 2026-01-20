@@ -100,7 +100,6 @@ class ProxyAdapter(HTTPAdapter):
         return state
 
 
-@cache
 def create_proxy_session(proxy_url: str, proxy_token: str) -> Session:
     """
     Create a session with proxy authentication.
@@ -119,7 +118,6 @@ def create_proxy_session(proxy_url: str, proxy_token: str) -> Session:
     return session
 
 
-@cache
 def create_session(
     cert: Optional[Union[str, tuple[str, str]]] = None,
     ca_bundle_path: Optional[str] = None,
