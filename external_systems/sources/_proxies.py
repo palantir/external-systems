@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 import os
-from functools import cache
 from typing import Any, Mapping, Optional, Union
 
 from requests import PreparedRequest, Response, Session
