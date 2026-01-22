@@ -12,12 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import hashlib
 import logging
 import os
 import random
 import socket
 import warnings
-from functools import cached_property
+from functools import cache, cached_property
 from tempfile import NamedTemporaryFile
 from typing import Any, Mapping, Optional, Tuple, cast
 
@@ -33,6 +34,26 @@ from ._sockets import create_socket
 from ._utils import read_file
 
 log = logging.getLogger(__name__)
+
+
+@cache
+def _create_ca_bundle_file(content_hash: str, contents: str) -> str:
+    """
+    Create a temporary CA bundle file with the given contents.
+
+    This function is cached globally based on content hash, so identical certificate
+    bundles across different Source instances will reuse the same temp file.
+
+    Args:
+        content_hash: SHA256 hash of the contents (used for cache key)
+        contents: The actual CA bundle contents to write
+
+    Returns:
+        str: Path to the temporary CA bundle file
+    """
+    with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
+        ca_bundle_file.write(contents)
+        return ca_bundle_file.name
 
 
 class Source:
@@ -111,9 +132,12 @@ class Source:
         for required_ca in self._source_parameters.server_certificates.values():
             new_ca_contents.append(required_ca)
 
-        with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
-            ca_bundle_file.write(os.linesep.join(new_ca_contents) + os.linesep)
-            return ca_bundle_file.name
+        # Combine all CA contents and compute hash for caching
+        combined_contents = os.linesep.join(new_ca_contents) + os.linesep
+        content_hash = hashlib.sha256(combined_contents.encode()).hexdigest()
+
+        # Use cached function to get or create the temp file
+        return _create_ca_bundle_file(content_hash, combined_contents)
 
     @cached_property
     def _client_certificate(self) -> Optional[Tuple[str, str]]:

@@ -82,6 +82,14 @@ class RetryingTimeoutHttpAdapter(HTTPAdapter):
         state["_timeout"] = self._timeout
         return state
 
+# Reuse connection pools between source instances
+@cache
+def create_retrying_timeout_http_adapter(
+    timeout: Optional[Union[float, tuple[float, float], tuple[float, None]]] = None,
+    retries: Optional[Union[Retry, int]] = None,
+) -> RetryingTimeoutHttpAdapter:
+    return RetryingTimeoutHttpAdapter(timeout=timeout, retries=retries)
+
 
 class ProxyAdapter(HTTPAdapter):
     def __init__(self, *args: Any, proxy_auth: dict[str, str], **kwargs: Any):
@@ -147,7 +155,8 @@ def create_session(
     if ca_bundle_path:
         session.verify = ca_bundle_path
 
-    adapter = RetryingTimeoutHttpAdapter(timeout=timeout)
+    adapter = create_retrying_timeout_http_adapter(timeout=timeout)
+
     session.mount("http://", adapter)
     session.mount("https://", adapter)
 
