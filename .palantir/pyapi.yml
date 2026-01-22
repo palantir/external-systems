@@ -1,0 +1,6 @@
+acceptedBreaks:
+  0.108.0:
+    external-systems:
+    - code: 'RemoveAttribute: Remove attribute (external_systems.sources._sources.Source): server_certificates_bundle_path.'
+      justification: Caching property not removing
+versionOverrides: {}
