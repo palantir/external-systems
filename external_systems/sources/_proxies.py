@@ -82,6 +82,7 @@ class RetryingTimeoutHttpAdapter(HTTPAdapter):
         state["_timeout"] = self._timeout
         return state
 
+
 # Reuse connection pools between source instances
 @cache
 def create_retrying_timeout_http_adapter(
