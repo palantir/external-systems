@@ -270,6 +270,7 @@ class Source:
         return create_socket(self._https_proxy_url, target_host, target_port, self._custom_ca_bundle_path)
 
 
+# Use the same bundle file for the same certs
 @cache
 def _create_ca_bundle_file(content_hash: str, contents: str) -> str:
     with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
