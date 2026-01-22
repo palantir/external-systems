@@ -36,26 +36,6 @@ from ._utils import read_file
 log = logging.getLogger(__name__)
 
 
-@cache
-def _create_ca_bundle_file(content_hash: str, contents: str) -> str:
-    """
-    Create a temporary CA bundle file with the given contents.
-
-    This function is cached globally based on content hash, so identical certificate
-    bundles across different Source instances will reuse the same temp file.
-
-    Args:
-        content_hash: SHA256 hash of the contents (used for cache key)
-        contents: The actual CA bundle contents to write
-
-    Returns:
-        str: Path to the temporary CA bundle file
-    """
-    with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
-        ca_bundle_file.write(contents)
-        return ca_bundle_file.name
-
-
 class Source:
     """
     A class representing a Source for an external systems.
@@ -288,3 +268,10 @@ class Source:
             raise ValueError("Only usable with Agent Proxy Sources")
 
         return create_socket(self._https_proxy_url, target_host, target_port, self._custom_ca_bundle_path)
+
+
+@cache
+def _create_ca_bundle_file(content_hash: str, contents: str) -> str:
+    with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
+        ca_bundle_file.write(contents)
+        return ca_bundle_file.name
