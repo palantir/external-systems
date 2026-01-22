@@ -83,7 +83,7 @@ class Source:
             }
         )
 
-    @property
+    @cached_property
     def server_certificates_bundle_path(self) -> Optional[str]:
         """
         File path to the CA bundle file containing all server certificates required by the Source.
