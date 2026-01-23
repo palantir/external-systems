@@ -17,7 +17,7 @@ import os
 import random
 import socket
 import warnings
-from functools import cached_property
+from functools import cache, cached_property
 from tempfile import NamedTemporaryFile
 from typing import Any, Mapping, Optional, Tuple, cast
 
@@ -111,9 +111,7 @@ class Source:
         for required_ca in self._source_parameters.server_certificates.values():
             new_ca_contents.append(required_ca)
 
-        with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
-            ca_bundle_file.write(os.linesep.join(new_ca_contents) + os.linesep)
-            return ca_bundle_file.name
+        return _create_ca_bundle_file(os.linesep.join(new_ca_contents) + os.linesep)
 
     @cached_property
     def _client_certificate(self) -> Optional[Tuple[str, str]]:
@@ -264,3 +262,11 @@ class Source:
             raise ValueError("Only usable with Agent Proxy Sources")
 
         return create_socket(self._https_proxy_url, target_host, target_port, self._custom_ca_bundle_path)
+
+
+# Use the same bundle file for the same certs
+@cache
+def _create_ca_bundle_file(contents: str) -> str:
+    with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
+        ca_bundle_file.write(contents)
+        return ca_bundle_file.name
