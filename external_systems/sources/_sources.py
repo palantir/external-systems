@@ -12,7 +12,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import hashlib
 import logging
 import os
 import random
@@ -112,12 +111,7 @@ class Source:
         for required_ca in self._source_parameters.server_certificates.values():
             new_ca_contents.append(required_ca)
 
-        # Combine all CA contents and compute hash for caching
-        combined_contents = os.linesep.join(new_ca_contents) + os.linesep
-        content_hash = hashlib.sha256(combined_contents.encode()).hexdigest()
-
-        # Use cached function to get or create the temp file
-        return _create_ca_bundle_file(content_hash, combined_contents)
+        return _create_ca_bundle_file(os.linesep.join(new_ca_contents) + os.linesep)
 
     @cached_property
     def _client_certificate(self) -> Optional[Tuple[str, str]]:
@@ -272,7 +266,7 @@ class Source:
 
 # Use the same bundle file for the same certs
 @cache
-def _create_ca_bundle_file(content_hash: str, contents: str) -> str:
+def _create_ca_bundle_file(contents: str) -> str:
     with NamedTemporaryFile(delete=False, mode="w") as ca_bundle_file:
         ca_bundle_file.write(contents)
         return ca_bundle_file.name
