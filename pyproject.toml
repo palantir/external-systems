@@ -21,7 +21,7 @@ packages = [{ include = "external_systems" }]
 
 [tool.poetry.dependencies]
 frozendict = "^2.4.6"
-python = "^3.9"
+python = "^3.10"
 requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
