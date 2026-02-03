@@ -210,7 +210,6 @@ class Source:
         Supported Sources:
             - S3
             - BigQuery
-            - Google Cloud Storage
         """
         if self._maybe_refreshable_resolved_source_credentials is None:
             raise ValueError("Resolved source credentials are not present on the Source.")

@@ -52,7 +52,7 @@ my_source: Source = ...
 some_secret: str = my_source.get_secret("SECRET_NAME")
 ```
 
-For sources using session credentials we support credentials generation and refresh management. This can be done by using `get_session_credentials` which supports `S3`, `BigQuery`, `Google Cloud Storage` sources.
+For sources using session credentials we support credentials generation and refresh management. This can be done by using `get_session_credentials` which supports `S3` and `BigQuery` sources.
 
 _Session credentials may not be available in all Foundry runtime environments_
 
