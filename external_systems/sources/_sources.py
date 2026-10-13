@@ -234,7 +234,9 @@ class Source:
         if num_https_connections <= 0:
             raise ValueError("No HTTPS connections are available on the source.")
         elif num_https_connections > 1:
-            raise ValueError(f"Only single connection sources are supported. Found {num_https_connections}")
+            raise ValueError(
+                f"Only single connection sources are supported. Found {num_https_connections} connections."
+            )
 
         return next(iter(self._https_connections.values()))
 
