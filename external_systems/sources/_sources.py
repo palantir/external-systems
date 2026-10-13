@@ -235,7 +235,7 @@ class Source:
             raise ValueError("No HTTPS connections are available on the source.")
         elif num_https_connections > 1:
             raise ValueError(f"Only single connection sources are supported. Found {num_https_connections}")
-        
+
         return next(iter(self._https_connections.values()))
 
     def get_https_proxy_uri(self) -> Optional[str]:
