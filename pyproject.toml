@@ -26,9 +26,6 @@ requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "24.1.1"
-# pyapi-checker's aexpy dependency treats JSON input as a ZIP archive with Click 8.4+.
-# Constrain Click until aexpy fixes its default input-mode flags.
-click = "<8.4"
 isort = "5.13.2"
 mypy = "1.9.0"
 ruff = "0.9.7"
