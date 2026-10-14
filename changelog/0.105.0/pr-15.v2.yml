@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: expose ca_bundle_path location
-  links:
-  - https://github.com/palantir/external-systems/pull/15

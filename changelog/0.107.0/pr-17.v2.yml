@@ -1,5 +1,0 @@
-type: feature
-feature:
-  description: Add oauth credentials type to source credentials api
-  links:
-  - https://github.com/palantir/external-systems/pull/17
