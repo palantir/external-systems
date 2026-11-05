@@ -69,6 +69,31 @@ if not isinstance(session_credentials, AwsCredentials):
     raise ...
 ```
 
+### OIDC identity tokens
+
+In runtimes that support OIDC token access, sources configured with OIDC expose
+an identity token independently of their session credentials:
+
+```python
+from external_systems.sources import OidcToken, Source
+
+my_source: Source = ...
+oidc_token: OidcToken = my_source.get_oidc_token()
+# Supply oidc_token.token to your identity provider's token exchange client.
+# oidc_token.expiration is a timezone-aware datetime.
+```
+
+The token is fetched on first use and cached until it is within 60 seconds of
+expiration. Call `get_oidc_token()` again when you need a current token; previously
+returned objects do not update themselves. Treat the JWT as a secret.
+
+Runtime adapters provide a `RefreshHandler[OidcToken]` through the optional
+`oidc_token_refresh_handler` constructor argument. The handler acquires a token
+for the source and returns its timezone-aware expiration. Installing this package
+alone does not enable OIDC in a runtime: without a handler, the method raises
+`ValueError`. Configuration, authorization, and refresh errors propagate
+to the caller. Provider-specific token exchange is handled by the caller.
+
 ## On-prem Connectivity with [Foundry Agent Proxy](https://www.palantir.com/docs/foundry/data-connection/agent-proxy-runtime)
 
 ### Socket

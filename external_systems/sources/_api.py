@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Optional, Union
 
@@ -75,6 +75,18 @@ class GcpOauthCredentials:
 @dataclass(frozen=True)
 class OauthCredentials:
     access_token: str
+    expiration: datetime
+
+
+@dataclass(frozen=True)
+class OidcToken:
+    """A source's OIDC identity token and its timezone-aware expiration.
+
+    The token is a sensitive bearer credential. It is excluded from repr, but
+    callers must also avoid logging or serializing it unintentionally.
+    """
+
+    token: str = field(repr=False)
     expiration: datetime
 
 

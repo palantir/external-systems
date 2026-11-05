@@ -25,8 +25,9 @@ import urllib3.util
 from frozendict import frozendict
 from requests import Session
 
-from ._api import AwsCredentials, ClientCertificateFilePaths, SourceCredentials, SourceParameters
+from ._api import AwsCredentials, ClientCertificateFilePaths, OidcToken, SourceCredentials, SourceParameters
 from ._connections import HttpsConnection
+from ._oidc import _OidcTokenManager
 from ._proxies import create_proxy_session
 from ._refreshable import DefaultSessionCredentialsManager, Refreshable, RefreshHandler
 from ._sockets import create_socket
@@ -49,6 +50,7 @@ class Source:
         source_configuration: Optional[Any],
         credentials_refresh_handler: Optional[RefreshHandler[SourceCredentials]] = None,
         ca_bundle_path: Optional[str] = None,
+        oidc_token_refresh_handler: Optional[RefreshHandler[OidcToken]] = None,
     ):
         self._source_parameters = source_parameters
         self._on_prem_proxy_service_uris = on_prem_proxy_service_uris
@@ -57,6 +59,9 @@ class Source:
         self._egress_proxy_token = egress_proxy_token
         self._credentials_refresh_handler = credentials_refresh_handler
         self._custom_ca_bundle_path = ca_bundle_path
+        self._oidc_token_manager = (
+            _OidcTokenManager(oidc_token_refresh_handler) if oidc_token_refresh_handler is not None else None
+        )
 
     @cached_property
     def secrets(self) -> Mapping[str, str]:
@@ -214,6 +219,28 @@ class Source:
         if self._maybe_refreshable_resolved_source_credentials is None:
             raise ValueError("Resolved source credentials are not present on the Source.")
         return self._maybe_refreshable_resolved_source_credentials
+
+    def get_oidc_token(self) -> OidcToken:
+        """Return the source's OIDC identity token, fetching it lazily.
+
+        Requires OIDC configuration on the source and a runtime that supplies
+        an OIDC token refresh handler. The runtime is responsible for authorized
+        token acquisition and propagating configuration or permission failures.
+        This method does not exchange the token for provider credentials.
+
+        Tokens are cached per Source and refreshed on access within 60 seconds
+        of expiration. Call this method again when a fresh token is needed;
+        previously returned OidcToken objects are immutable snapshots.
+        Refresh failures propagate to the caller without returning a stale token.
+
+        Raises:
+            ValueError: If the runtime has not supplied an OIDC handler, or the
+                handler returns no token, an empty or expired token, or an
+                expiration without a timezone.
+        """
+        if self._oidc_token_manager is None:
+            raise ValueError("OIDC token access is not available in this runtime.")
+        return self._oidc_token_manager.get()
 
     def get_secret(self, key: str) -> str:
         """Get the plaintext value for the provided secret key, as configured in the Source secrets."""

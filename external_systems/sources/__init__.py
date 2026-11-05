@@ -19,6 +19,7 @@ from ._api import (
     GcpOauthCredentials,
     HttpsConnectionParameters,
     OauthCredentials,
+    OidcToken,
     SourceCredentials,
     SourceParameters,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "Source",
     "SourceParameters",
     "OauthCredentials",
+    "OidcToken",
     "RefreshHandler",
     "Refreshable",
     "AwsCredentials",
