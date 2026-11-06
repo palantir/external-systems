@@ -27,7 +27,7 @@ from requests import Session
 
 from ._api import AwsCredentials, ClientCertificateFilePaths, IdToken, SourceCredentials, SourceParameters
 from ._connections import HttpsConnection
-from ._oidc import _OidcTokenManager
+from ._oidc import _OidcIdTokenManager
 from ._proxies import create_proxy_session
 from ._refreshable import DefaultSessionCredentialsManager, Refreshable, RefreshHandler
 from ._sockets import create_socket
@@ -60,7 +60,7 @@ class Source:
         self._credentials_refresh_handler = credentials_refresh_handler
         self._custom_ca_bundle_path = ca_bundle_path
         self._oidc_token_manager = (
-            _OidcTokenManager(oidc_token_refresh_handler) if oidc_token_refresh_handler is not None else None
+            _OidcIdTokenManager(oidc_token_refresh_handler) if oidc_token_refresh_handler is not None else None
         )
 
     @cached_property

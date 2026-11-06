@@ -82,8 +82,7 @@ class OauthCredentials:
 class IdToken:
     """A source's OIDC identity token and its timezone-aware expiration.
 
-    Expiration represents the JWT's ``exp`` claim as a datetime, so callers
-    do not need to decode the token to determine when it expires.
+    Expiration represents the JWT's ``exp`` claim as a datetime.
 
     The token is a sensitive bearer credential. Callers must avoid logging or
     serializing it unintentionally.

@@ -22,7 +22,7 @@ from ._refreshable import RefreshHandler
 _REFRESH_OFFSET = timedelta(seconds=60)
 
 
-class _OidcTokenManager:
+class _OidcIdTokenManager:
     def __init__(self, refresh_handler: RefreshHandler[IdToken]) -> None:
         self._refresh_handler = refresh_handler
         self._token: Optional[IdToken] = None
