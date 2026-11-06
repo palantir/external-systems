@@ -16,19 +16,19 @@ from datetime import datetime, timedelta, timezone
 from threading import Lock
 from typing import Optional
 
-from ._api import OidcToken
+from ._api import IdToken
 from ._refreshable import RefreshHandler
 
 _REFRESH_OFFSET = timedelta(seconds=60)
 
 
 class _OidcTokenManager:
-    def __init__(self, refresh_handler: RefreshHandler[OidcToken]) -> None:
+    def __init__(self, refresh_handler: RefreshHandler[IdToken]) -> None:
         self._refresh_handler = refresh_handler
-        self._token: Optional[OidcToken] = None
+        self._token: Optional[IdToken] = None
         self._lock = Lock()
 
-    def get(self) -> OidcToken:
+    def get(self) -> IdToken:
         with self._lock:
             if self._token is not None and self._token.expiration > datetime.now(timezone.utc) + _REFRESH_OFFSET:
                 return self._token

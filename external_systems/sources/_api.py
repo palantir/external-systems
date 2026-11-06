@@ -79,11 +79,14 @@ class OauthCredentials:
 
 
 @dataclass(frozen=True)
-class OidcToken:
+class IdToken:
     """A source's OIDC identity token and its timezone-aware expiration.
 
-    The token is a sensitive bearer credential. It is excluded from repr, but
-    callers must also avoid logging or serializing it unintentionally.
+    Expiration represents the JWT's ``exp`` claim as a datetime, so callers
+    do not need to decode the token to determine when it expires.
+
+    The token is a sensitive bearer credential. Callers must avoid logging or
+    serializing it unintentionally.
     """
 
     token: str = field(repr=False)

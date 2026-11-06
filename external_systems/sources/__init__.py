@@ -18,8 +18,8 @@ from ._api import (
     ClientCertificateFilePaths,
     GcpOauthCredentials,
     HttpsConnectionParameters,
+    IdToken,
     OauthCredentials,
-    OidcToken,
     SourceCredentials,
     SourceParameters,
 )
@@ -36,7 +36,7 @@ __all__ = [
     "Source",
     "SourceParameters",
     "OauthCredentials",
-    "OidcToken",
+    "IdToken",
     "RefreshHandler",
     "Refreshable",
     "AwsCredentials",
