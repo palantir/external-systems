@@ -25,8 +25,9 @@ import urllib3.util
 from frozendict import frozendict
 from requests import Session
 
-from ._api import AwsCredentials, ClientCertificateFilePaths, SourceCredentials, SourceParameters
+from ._api import AwsCredentials, ClientCertificateFilePaths, IdToken, SourceCredentials, SourceParameters
 from ._connections import HttpsConnection
+from ._oidc import _OidcIdTokenManager
 from ._proxies import create_proxy_session
 from ._refreshable import DefaultSessionCredentialsManager, Refreshable, RefreshHandler
 from ._sockets import create_socket
@@ -49,6 +50,7 @@ class Source:
         source_configuration: Optional[Any],
         credentials_refresh_handler: Optional[RefreshHandler[SourceCredentials]] = None,
         ca_bundle_path: Optional[str] = None,
+        oidc_token_refresh_handler: Optional[RefreshHandler[IdToken]] = None,
     ):
         self._source_parameters = source_parameters
         self._on_prem_proxy_service_uris = on_prem_proxy_service_uris
@@ -57,6 +59,9 @@ class Source:
         self._egress_proxy_token = egress_proxy_token
         self._credentials_refresh_handler = credentials_refresh_handler
         self._custom_ca_bundle_path = ca_bundle_path
+        self._oidc_token_manager = (
+            _OidcIdTokenManager(oidc_token_refresh_handler) if oidc_token_refresh_handler is not None else None
+        )
 
     @cached_property
     def secrets(self) -> Mapping[str, str]:
@@ -214,6 +219,21 @@ class Source:
         if self._maybe_refreshable_resolved_source_credentials is None:
             raise ValueError("Resolved source credentials are not present on the Source.")
         return self._maybe_refreshable_resolved_source_credentials
+
+    def get_oidc_id_token(self) -> IdToken:
+        """
+        Return the source's OIDC identity token, fetching it lazily.
+
+        Requires OIDC configuration on the source. Tokens are refreshed on access
+        near expiration; call this method again when a current token is needed.
+
+        Raises:
+            ValueError: If OIDC token access is unavailable or the returned token
+                is empty, expired, or has an expiration without a timezone.
+        """
+        if self._oidc_token_manager is None:
+            raise ValueError("OIDC token access is not available.")
+        return self._oidc_token_manager.get()
 
     def get_secret(self, key: str) -> str:
         """Get the plaintext value for the provided secret key, as configured in the Source secrets."""

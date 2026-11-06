@@ -1,0 +1,6 @@
+acceptedBreaks:
+  0.112.0:
+    external-systems:
+    - code: 'AddOptionalParameter: Add PositionalOrKeyword parameter (external_systems.sources._sources.Source.__init__): oidc_token_refresh_handler.'
+      justification: Add an optional runtime OIDC refresh handler after all existing constructor parameters; existing calls retain their behavior.
+versionOverrides: {}
