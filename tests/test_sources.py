@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import pickle
 from tempfile import NamedTemporaryFile
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -77,6 +78,23 @@ def source_configuration() -> Any:
 @pytest.fixture
 def mock_refresh_handler() -> RefreshHandler[SourceCredentials]:
     return MagicMock(spec=RefreshHandler)
+
+
+def test_source_can_be_pickled(
+    source_params: SourceParameters, on_prem_proxy_uris: list[str], source_configuration: Any
+) -> None:
+    source = Source(source_params, on_prem_proxy_uris, [], None, source_configuration)
+
+    restored = pickle.loads(pickle.dumps(source))
+
+    assert restored.get_secret("SecretApiName") == "my-raw-secret-value"
+    assert restored.get_session_credentials().get() == AwsCredentials("access-key", "secret")
+    assert restored.source_configuration == {"type": "s3", "bucket_url": "bucket-url"}
+    assert restored.get_https_proxy_uri() == "https://user:on-prem-proxy-token@palantirfoundry.com/on-prem-proxy/api"
+    connection = restored.get_https_connection()
+    assert connection.url == "https://example.com"
+    assert connection.headers == {"header": "header_value"}
+    assert connection.query_params == {"query_param": "query_param_value"}
 
 
 @patch("external_systems.sources._sources.create_proxy_session")
