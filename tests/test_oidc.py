@@ -138,7 +138,6 @@ def test_refresh_failure_propagates_and_next_call_retries(handler: Mock) -> None
 def test_source_can_be_pickled() -> None:
     source = make_source(_UnexpectedRefreshHandler())
 
-    # Spark UDFs must be able to pickle the assembled sources they capture.
     restored = pickle.loads(pickle.dumps(source))
 
     assert restored.get_session_credentials().get() == AwsCredentials("access", "secret")
