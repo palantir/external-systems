@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import pickle
 from tempfile import NamedTemporaryFile
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -77,6 +78,15 @@ def source_configuration() -> Any:
 @pytest.fixture
 def mock_refresh_handler() -> RefreshHandler[SourceCredentials]:
     return MagicMock(spec=RefreshHandler)
+
+
+def test_source_can_be_pickled(
+    source_params: SourceParameters, on_prem_proxy_uris: list[str], source_configuration: Any
+) -> None:
+    source = Source(source_params, on_prem_proxy_uris, [], None, source_configuration)
+
+    # Spark UDFs must be able to pickle the assembled sources they capture.
+    pickle.loads(pickle.dumps(source))
 
 
 @patch("external_systems.sources._sources.create_proxy_session")

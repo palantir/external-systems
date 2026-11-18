@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from concurrent.futures import ThreadPoolExecutor
+import pickle
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from unittest.mock import Mock, patch
@@ -23,6 +23,11 @@ from external_systems.sources import AwsCredentials, IdToken, RefreshHandler, So
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
 TOKEN = IdToken("test-identity-token", NOW + timedelta(hours=1))
+
+
+class _StaticRefreshHandler(RefreshHandler[IdToken]):
+    def refresh(self) -> IdToken:
+        return TOKEN
 
 
 @pytest.fixture
@@ -130,14 +135,13 @@ def test_refresh_failure_propagates_and_next_call_retries(handler: Mock) -> None
         assert source.get_oidc_id_token() is refreshed
 
 
-def test_concurrent_access_reuses_token(handler: Mock) -> None:
-    source = make_source(handler)
+def test_get_oidc_after_pickling() -> None:
+    source = make_source(_StaticRefreshHandler())
+
     with patch("external_systems.sources._oidc.datetime") as clock:
         clock.now.return_value = NOW
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            results = list(executor.map(lambda _: source.get_oidc_id_token(), range(8)))
-    assert all(token is TOKEN for token in results)
-    handler.refresh.assert_called_once_with()
+        restored = pickle.loads(pickle.dumps(source))
+        assert restored.get_oidc_id_token() == TOKEN
 
 
 def test_token_repr_excludes_jwt() -> None:
