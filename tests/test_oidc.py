@@ -135,7 +135,7 @@ def test_refresh_failure_propagates_and_next_call_retries(handler: Mock) -> None
         assert source.get_oidc_id_token() is refreshed
 
 
-def test_source_can_be_pickled_without_fetching_oidc_token() -> None:
+def test_source_can_be_pickled() -> None:
     source = make_source(_UnexpectedRefreshHandler())
 
     # Spark UDFs must be able to pickle the assembled sources they capture.
