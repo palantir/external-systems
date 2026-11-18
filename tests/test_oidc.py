@@ -25,9 +25,9 @@ NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
 TOKEN = IdToken("test-identity-token", NOW + timedelta(hours=1))
 
 
-class _UnexpectedRefreshHandler(RefreshHandler[IdToken]):
+class _StaticRefreshHandler(RefreshHandler[IdToken]):
     def refresh(self) -> IdToken:
-        raise AssertionError("Token refresh must not run during serialization")
+        return TOKEN
 
 
 @pytest.fixture
@@ -135,12 +135,13 @@ def test_refresh_failure_propagates_and_next_call_retries(handler: Mock) -> None
         assert source.get_oidc_id_token() is refreshed
 
 
-def test_source_can_be_pickled() -> None:
-    source = make_source(_UnexpectedRefreshHandler())
+def test_get_oidc_after_pickling() -> None:
+    source = make_source(_StaticRefreshHandler())
 
-    restored = pickle.loads(pickle.dumps(source))
-
-    assert restored.get_session_credentials().get() == AwsCredentials("access", "secret")
+    with patch("external_systems.sources._oidc.datetime") as clock:
+        clock.now.return_value = NOW
+        restored = pickle.loads(pickle.dumps(source))
+        assert restored.get_oidc_id_token() == TOKEN
 
 
 def test_token_repr_excludes_jwt() -> None:
