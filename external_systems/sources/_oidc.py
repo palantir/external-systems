@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 from datetime import datetime, timedelta, timezone
-from threading import Lock
 from typing import Optional
 
 from ._api import IdToken
@@ -26,20 +25,18 @@ class _OidcIdTokenManager:
     def __init__(self, refresh_handler: RefreshHandler[IdToken]) -> None:
         self._refresh_handler = refresh_handler
         self._token: Optional[IdToken] = None
-        self._lock = Lock()
 
     def get(self) -> IdToken:
-        with self._lock:
-            if self._token is not None and self._token.expiration > datetime.now(timezone.utc) + _REFRESH_OFFSET:
-                return self._token
+        if self._token is not None and self._token.expiration > datetime.now(timezone.utc) + _REFRESH_OFFSET:
+            return self._token
 
-            token = self._refresh_handler.refresh()
-            if token is None or not token.token:
-                raise ValueError("OIDC refresh handler returned no token or an empty token.")
-            if token.expiration.utcoffset() is None:
-                raise ValueError("OIDC token expiration must be timezone-aware.")
-            if token.expiration <= datetime.now(timezone.utc):
-                raise ValueError("OIDC refresh handler returned an expired token.")
+        token = self._refresh_handler.refresh()
+        if token is None or not token.token:
+            raise ValueError("OIDC refresh handler returned no token or an empty token.")
+        if token.expiration.utcoffset() is None:
+            raise ValueError("OIDC token expiration must be timezone-aware.")
+        if token.expiration <= datetime.now(timezone.utc):
+            raise ValueError("OIDC refresh handler returned an expired token.")
 
-            self._token = token
-            return token
+        self._token = token
+        return token
